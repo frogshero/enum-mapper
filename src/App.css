@@ -41,6 +41,11 @@
 .From-item {
     width: 300px;
 }
+.From-item-SEL {
+    width: 300px;
+	color: red;
+	font-weight: bold;
+}
 .From-container {
     width: 300px;
 	border: 1px solid blue;

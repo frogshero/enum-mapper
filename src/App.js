@@ -31,7 +31,7 @@ class EnumMapper extends React.Component {
 				if (fromItem.name.toUpperCase() === toItem.name.toUpperCase() || fromItem.desc.toUpperCase() === toItem.desc.toUpperCase()) {
 					matched = true;
 					defaultMappings.set(toItem.name, [fromItem]);
-					fromNotMatched.splice(fromIndex, 1);
+					fromNotMatched.splice(fromNotMatched.findIndex((e) => e.name === fromItem.name), 1);
 				}
 			});
 			if (!matched) {

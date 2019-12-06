@@ -12,15 +12,15 @@ export class EnumGrid extends React.Component<GridParam> {
 	
 	componentDidMount() {}
 	
-	allowDrop(ev: any) {
+	allowDrop(ev: React.DragEvent) {
 		ev.preventDefault();
 	}
 	
-	drag(ev: any) {
-		ev.dataTransfer.setData("text/plain", ev.target.id);
+	drag(ev: React.DragEvent) {
+		ev.dataTransfer.setData("text/plain", ev.currentTarget.id);
 	}
 	
-	drop(ev: any) {
+	drop(ev: React.DragEvent) {
 		ev.preventDefault();
 		let dragElementId: string = ev.dataTransfer.getData("text");
     	let dragNode = document.getElementById(dragElementId); 
@@ -34,9 +34,18 @@ export class EnumGrid extends React.Component<GridParam> {
     	var fromNode = dragNode.parentNode as HTMLElement;
     	if (fromNode === null) throw new Error(`Dragged Node should have parent node!`)
 
-		var targetNode = ev.target;
+		let targetNode = ev.currentTarget as HTMLElement;
+		if (targetNode === null) {
+			console.error(targetNode);
+			throw new Error("drop target node not exist");
+		}
 		if (targetNode.getAttribute("col") === null) {
-			targetNode = targetNode.parentNode;
+			if (targetNode.parentNode === null) {
+				console.error(targetNode);
+				throw new Error("drop target node parent not exist");
+			} else {
+				targetNode = targetNode.parentNode as HTMLElement;
+			}
     	}
     
 		if (targetNode.id === dragNode.id || fromNode.id === targetNode.id || (targetNode.getAttribute("col") === "from" && fromNode.getAttribute("col") === "from")) {

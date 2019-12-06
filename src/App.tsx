@@ -27,8 +27,8 @@ class EnumMapper extends React.Component<{}, MappingState> {
 		});
   }
   
-  constructor(props: any) {
-		super(props);
+  constructor() {
+		super({});
 		this.enumValues = require('./data.json');
 		
 		let defaultMappings: EnumItemMapping = {};
@@ -114,21 +114,24 @@ class EnumMapper extends React.Component<{}, MappingState> {
 		}
   }
   
-  itemClick(e: any) {
+  itemClick(e: React.MouseEvent) {
 		if (!e.ctrlKey) return;
 
-		let clickNode = e.target;
+		let clickNode = e.currentTarget as HTMLElement;
 		if (clickNode.getAttribute("col") === null) {
-			clickNode = clickNode.parentNode;
+			if (clickNode.parentNode === null) {
+				throw new Error("click element has not container");
+			} else {
+				clickNode = clickNode.parentNode as HTMLElement;
+			}
 		}
 		let toCol = clickNode.getAttribute("col");
 		if (!e.shiftKey) {
 			//选取
 			if (toCol === "to") return;
-			let fromIdx = e.target.getAttribute("index");
-			if (!fromIdx) {
-				console.error(e.target);
-				throw new Error("target node has no index");
+			let fromIdx = e.currentTarget.getAttribute("index");
+			if (isNaN(Number(fromIdx))) {
+				throw new Error("click node has no index");
 			}
 			let fromIndex = Number(fromIdx);
 			let notMatchedArr = this.state.fromNotMatched;
@@ -139,12 +142,15 @@ class EnumMapper extends React.Component<{}, MappingState> {
 			//释放
 			if (toCol === "from") return;
 			let toIdx = clickNode.getAttribute("index");
+			if (isNaN(Number(toIdx))) {
+				throw new Error("click move node has no index");
+			}
 			//from -> to
 			var {mappings: stateMappings, fromNotMatched: stateNotMatched} = this.state;
 			let selectedItem = this.state.fromNotMatched.filter((e)=> e.selected === true);
 			selectedItem.forEach((val) => {
 				if (val.selected) {
-					this.moveItem(stateMappings, stateNotMatched, "from", "to", val.idx, -1, toIdx);
+					this.moveItem(stateMappings, stateNotMatched, "from", "to", val.idx, -1, Number(toIdx));
 				}
 			});
 			this.setState({mappings: stateMappings, fromNotMatched: stateNotMatched});

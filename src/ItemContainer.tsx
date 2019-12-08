@@ -46,12 +46,12 @@ export default class ItemContaner extends React.Component<ContainerParam> {
         return (<div className="To-item" onDrop={this.containerDrop} onClick={this.containerClick} draggable="false" onDragOver={this.allowDrop}>
             {
                 this.props.items.map((item) => 
-                <ItemForDrag key={this.props.col + this.props.rowIdx} 
-                itemInfo={item} 
-                dragStart={this.dragStart} 
-                // dropAtItem={this.containerDrop} 
-                itemClick={this.itemClick}
-                />)
+                    <ItemForDrag 
+                        key={this.props.col + this.props.rowIdx} 
+                        itemInfo={item} 
+                        dragStart={this.dragStart} 
+                        itemClick={this.itemClick}
+                    />)
             }
         </div>);
     }

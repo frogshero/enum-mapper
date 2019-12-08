@@ -1,42 +1,44 @@
 import React from 'react';
 import './App.css';
-import { EnumGrid } from './EnumGrid';
-import { GridParam, EnumItemInfo, EnumItemMapping, EnumInfoData, MappingState } from './EnumInfo';
+import EnumGrid from './EnumGrid';
+import { EnumItemInfo, EnumItemMapping, EnumInfoData, MappingState, FromToColumn, DragStartInfo } from './EnumInfo';
+// this.enumValues = require('./data.json');
+import EnumSource from './data.json';
 
 const App: React.FC = () => {
-  return (
-    <div className="App">
-	    Enum Mapper
+	return (
+		<div className="App">
+			Enum Mapper
         <EnumMapper />
-    </div>
-  );
+		</div>
+	);
 }
 
 class EnumMapper extends React.Component<{}, MappingState> {
-  enumValues: EnumInfoData;
+	enumValues: EnumInfoData;
 
-  sortByName(arr: EnumItemInfo[]) {
-		arr.sort((x, y)=>{
-			 if (x.name < y.name) {
+	sortByName(arr: EnumItemInfo[]) {
+		arr.sort((x, y) => {
+			if (x.name < y.name) {
 				return 1;
-			 } else if (x > y) {
+			} else if (x > y) {
 				return -1;
-			 } else {
+			} else {
 				return 0;
-			 }
+			}
 		});
-  }
-  
-  constructor() {
-		super({});
-		this.enumValues = require('./data.json');
-		
+	}
+
+	constructor(props: any) {
+		super(props);
+		//this.enumValues = require('./data.json');
+		this.enumValues = { from: [], to: [] };
 		let defaultMappings: EnumItemMapping = {};
+		this.enumValues.from = EnumSource.from.map((val, idx) => { return { name: val.name, desc: val.desc, idx: idx, selected: false, display: val.name.concat(" " + val.desc) } });
 		this.sortByName(this.enumValues.from);
-		this.enumValues.from = this.enumValues.from.map((val, idx) => { return {name: val.name, desc: val.desc, idx: idx, selected: false, display: val.name.concat(" " + val.desc)}});
-		this.sortByName(this.enumValues.to); 
-		this.enumValues.to = this.enumValues.to.map((val, idx) => { return {name: val.name, desc: val.desc, idx: idx, selected: false, display: val.name.concat(" " + val.desc)}});
-		
+		this.enumValues.to = EnumSource.to.map((val, idx) => { return { name: val.name, desc: val.desc, idx: idx, selected: false, display: val.name.concat(" " + val.desc) } });
+		this.sortByName(this.enumValues.to);
+
 		let fromNotMatched = this.enumValues.from.slice();
 		this.enumValues.to.forEach((toItem) => {
 			var matched = false;
@@ -58,9 +60,9 @@ class EnumMapper extends React.Component<{}, MappingState> {
 			switchStr: ""
 			//Array(enumValues.to.length).fill(null)
 		};
-  }
-  
-  btnClick() {
+	}
+
+	btnClick() {
 		var result = "";
 		Object.keys(this.state.mappings).forEach((key) => {
 			let arr = this.state.mappings[key];
@@ -71,22 +73,30 @@ class EnumMapper extends React.Component<{}, MappingState> {
 				result = result.concat("        return ", key, ";\n");
 			}
 		});
-		
-		this.setState({switchStr: result})
-  }
-  
-  dropped(fromCol: string, toCol: string, fromIndex: number, startToIndex: number, endToIndex: number) {
+
+		this.setState({ switchStr: result })
+	}
+
+	containerDrop = (dragStartInfo: DragStartInfo, targetCol: FromToColumn, targetRowIdx: number) => {
+		if ((dragStartInfo.col === targetCol && dragStartInfo.rowIdx === targetRowIdx)  //实际没动
+			|| (targetCol === FromToColumn.from && dragStartInfo.col === FromToColumn.from)  //from => from 
+			|| (targetCol === FromToColumn.to && targetRowIdx >= this.enumValues.to.length) //超过了To列的最大长度，不能移动
+			)
+		{
+			return;
+		}
+
 		let stateMappings = this.state.mappings;
 		let stateNotMatched = this.state.fromNotMatched.slice(); //浅复制
 		//var {mappings: stateMappings, fromNotMatched: stateNotMatched} = this.state;
-		this.moveItem(stateMappings, stateNotMatched, fromCol, toCol, fromIndex, startToIndex, endToIndex);
-		this.setState({mappings: stateMappings, fromNotMatched: stateNotMatched});
-  }
-  
-  private moveItem(stateMappings: EnumItemMapping, stateNotMatched: EnumItemInfo[], fromCol: string, toCol: string, fromIndex: number, startToIndex: number, endToIndex: number) {
+		this.moveItem(stateMappings, stateNotMatched, dragStartInfo.col, targetCol, dragStartInfo.fromArrIdx, dragStartInfo.rowIdx, targetRowIdx);
+		this.setState({ mappings: stateMappings, fromNotMatched: stateNotMatched });
+	}
+
+	private moveItem(stateMappings: EnumItemMapping, stateNotMatched: EnumItemInfo[], fromCol: FromToColumn, toCol: FromToColumn, fromIndex: number, startToIndex: number, endToIndex: number) {
 		let originalTo = this.enumValues.to;
 		let dragItem = this.enumValues.from[fromIndex];
-		if (fromCol === "to") {
+		if (fromCol === FromToColumn.to) {
 			//清除原来的mapping
 			let key = originalTo[startToIndex].name;
 			let matchedArr = stateMappings[key];
@@ -96,8 +106,8 @@ class EnumMapper extends React.Component<{}, MappingState> {
 		} else {
 			stateNotMatched.splice(stateNotMatched.findIndex((i) => i.idx === fromIndex), 1);
 		}
-		
-		if (toCol === "to") {
+
+		if (toCol === FromToColumn.to) {
 			var key = originalTo[endToIndex].name;
 			if (key === null) {
 				return;
@@ -109,68 +119,39 @@ class EnumMapper extends React.Component<{}, MappingState> {
 			} else {
 				mapArr.push(dragItem);
 			}
-	    } else {
+		} else {
 			stateNotMatched.push(dragItem);
 		}
-  }
-  
-  itemClick(e: React.MouseEvent) {
-		if (!e.ctrlKey) return;
-
-		let clickNode = e.currentTarget as HTMLElement;
-		if (clickNode.getAttribute("col") === null) {
-			if (clickNode.parentNode === null) {
-				throw new Error("click element has not container");
-			} else {
-				clickNode = clickNode.parentNode as HTMLElement;
-			}
-		}
-		let toCol = clickNode.getAttribute("col");
-		if (!e.shiftKey) {
-			//选取
-			if (toCol === "to") return;
-			let fromIdx = e.currentTarget.getAttribute("index");
-			if (isNaN(Number(fromIdx))) {
-				throw new Error("click node has no index");
-			}
-			let fromIndex = Number(fromIdx);
-			let notMatchedArr = this.state.fromNotMatched;
-			let clickItem = notMatchedArr.find((e) => e.idx === fromIndex);
-			clickItem!.selected = !clickItem!.selected;
-			this.setState({fromNotMatched: notMatchedArr});
-		} else {
-			//释放
-			if (toCol === "from") return;
-			let toIdx = clickNode.getAttribute("index");
-			if (isNaN(Number(toIdx))) {
-				throw new Error("click move node has no index");
-			}
-			//from -> to
-			var {mappings: stateMappings, fromNotMatched: stateNotMatched} = this.state;
-			let selectedItem = this.state.fromNotMatched.filter((e)=> e.selected === true);
-			selectedItem.forEach((val) => {
-				if (val.selected) {
-					this.moveItem(stateMappings, stateNotMatched, "from", "to", val.idx, -1, Number(toIdx));
-				}
-			});
-			this.setState({mappings: stateMappings, fromNotMatched: stateNotMatched});
-		}
-
 	}
-	
+
+	setItemSelected = (idx: number) => {
+		let notMatchedArr = this.state.fromNotMatched;
+		let clickItem = notMatchedArr.find((e) => e.idx === idx);
+		clickItem!.selected = !clickItem!.selected;
+		this.setState({ fromNotMatched: notMatchedArr });
+	}
+
+	containerClick = (col: FromToColumn, rowIdx: number) => {
+		//多选只能这样移动：from -> to
+		var { mappings: stateMappings, fromNotMatched: stateNotMatched } = this.state;
+		let selectedItem = this.state.fromNotMatched.filter((e) => e.selected === true);
+		selectedItem.forEach((val) => {
+			if (val.selected) {
+				this.moveItem(stateMappings, stateNotMatched, FromToColumn.from, FromToColumn.to, val.idx, -1, rowIdx);
+			}
+		});
+		this.setState({ mappings: stateMappings, fromNotMatched: stateNotMatched });
+	}
+
 	render() {
-		let gridParam: GridParam = {
-			fromNotMatched: this.state.fromNotMatched,
-			to: this.enumValues.to,
-			mappings: this.state.mappings,
-			dropped: (fromCol: string, toCol: string, fromIndex: number, startToIndex: number, endToIndex: number) => this.dropped(fromCol, toCol, fromIndex, startToIndex, endToIndex),
-			itemClick: (e: any) => this.itemClick(e)
-		}
-	
 		return (<div>
 			<div className="DDContainer"><div className="To-item">ToEnum</div><div className="To-item">Matched</div><div className="To-item">FromEnum</div></div>
-			<EnumGrid fromNotMatched = {gridParam.fromNotMatched} to={gridParam.to} mappings={gridParam.mappings} dropped={gridParam.dropped} itemClick={gridParam.itemClick}/>
-			<button className="button" onClick={()=>this.btnClick()}>PRINT</button>
+			<EnumGrid fromNotMatched={this.state.fromNotMatched} to={this.enumValues.to} mappings={this.state.mappings}
+				containerDrop={this.containerDrop}
+				containerClick={this.containerClick}
+				setItemSelected={this.setItemSelected} 
+				/>
+			<button className="button" onClick={() => this.btnClick()}>PRINT</button>
 			<div />
 			<textarea id="result" cols={80} rows={15} value={this.state.switchStr} readOnly></textarea>
 		</div>);

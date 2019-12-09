@@ -1,11 +1,11 @@
 export interface EnumItemInfo {name: string, desc: string, idx: number, selected: boolean, display: string}
 export interface EnumInfoData {from: EnumItemInfo[], to: EnumItemInfo[]}
-export interface EnumItemMapping {[key: string]: EnumItemInfo[]}
-export interface MappingState {mappings: EnumItemMapping, fromNotMatched: EnumItemInfo[], switchStr: string}
+// export interface EnumItemMapping {[key: number]: EnumItemInfo[]}
+export interface MappingState {mappings: EnumItemInfo[][], fromNotMatched: EnumItemInfo[], switchStr: string}
 export interface GridParam {
     fromNotMatched: EnumItemInfo[],
     to: EnumItemInfo[],
-    mappings: EnumItemMapping,
+    mappings: EnumItemInfo[][],
     containerDrop(dragStartInfo: DragStartInfo, targetCol: FromToColumn, targetRowIdx: number): void,
     setItemSelected(item: number): void,
     containerClick(col: FromToColumn, rowIdx: number): void

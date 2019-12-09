@@ -16,7 +16,7 @@ export default function EnumGrid(props: GridParam) {
 		let fromItem = i >= notMatchedArr.length ? [] : [notMatchedArr[i]];
 		let toText = i >= toArr.length ? "" : toArr[i].display;
 		
-		var matchedArr = i >= toArr.length ? [] : matchedMappings[toArr[i].name];
+		var matchedArr = i >= toArr.length ? [] : matchedMappings[i];
 		//list中的元素都得有key, key不能通过getAttribute读取
 		list.push(
 			<div className="DDContainer" key={"DD" + i}>

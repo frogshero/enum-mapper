@@ -13,7 +13,7 @@ export default class ItemContaner extends React.Component<ContainerParam> {
     }
 
     containerClick = (e: React.MouseEvent) => {
-        if (this.props.col == FromToColumn.from) return;
+        if (this.props.col === FromToColumn.from) return;
         this.props.containerClick(this.props.col, this.props.rowIdx);
     }
 

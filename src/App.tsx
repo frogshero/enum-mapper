@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import EnumGrid from './EnumGrid';
-import { EnumItemInfo, EnumItemMapping, EnumInfoData, MappingState, FromToColumn, DragStartInfo } from './EnumInfo';
+import { EnumItemInfo, EnumInfoData, MappingState, FromToColumn, DragStartInfo } from './EnumInfo';
 // this.enumValues = require('./data.json');
 import EnumSource from './data.json';
 
@@ -33,24 +33,24 @@ class EnumMapper extends React.Component<{}, MappingState> {
 		super(props);
 		//this.enumValues = require('./data.json');
 		this.enumValues = { from: [], to: [] };
-		let defaultMappings: EnumItemMapping = {};
 		this.enumValues.from = EnumSource.from.map((val, idx) => { return { name: val.name, desc: val.desc, idx: idx, selected: false, display: val.name.concat(" " + val.desc) } });
 		this.sortByName(this.enumValues.from);
 		this.enumValues.to = EnumSource.to.map((val, idx) => { return { name: val.name, desc: val.desc, idx: idx, selected: false, display: val.name.concat(" " + val.desc) } });
 		this.sortByName(this.enumValues.to);
 
+		let defaultMappings: EnumItemInfo[][] = new Array(this.enumValues.to.length).fill([]);
 		let fromNotMatched = this.enumValues.from.slice();
 		this.enumValues.to.forEach((toItem) => {
 			var matched = false;
 			this.enumValues.from.forEach((fromItem, fromIndex) => {
 				if (fromItem.name.toUpperCase() === toItem.name.toUpperCase() || fromItem.desc.toUpperCase() === toItem.desc.toUpperCase()) {
 					matched = true;
-					defaultMappings[toItem.name] = [fromItem];
+					defaultMappings[toItem.idx] = [fromItem];
 					fromNotMatched.splice(fromNotMatched.findIndex((e) => e.name === fromItem.name), 1);
 				}
 			});
 			if (!matched) {
-				defaultMappings[toItem.name] = [];
+				defaultMappings[toItem.idx] = [];
 			}
 		});
 
@@ -64,13 +64,13 @@ class EnumMapper extends React.Component<{}, MappingState> {
 
 	btnClick() {
 		var result = "";
-		Object.keys(this.state.mappings).forEach((key) => {
-			let arr = this.state.mappings[key];
-			if (arr.length > 0) {
-				arr.forEach((item) => {
+		// Object.keys(this.state.mappings).forEach((key) => {
+		this.state.mappings.forEach((matchedArr, idx) => {
+			if (matchedArr.length > 0) {
+				matchedArr.forEach((item) => {
 					result = result.concat("      case ", item.name, ":\n");
 				});
-				result = result.concat("        return ", key, ";\n");
+				result = result.concat("        return ", this.enumValues.to[idx].name, ";\n");
 			}
 		});
 
@@ -93,32 +93,19 @@ class EnumMapper extends React.Component<{}, MappingState> {
 		this.setState({ mappings: stateMappings, fromNotMatched: stateNotMatched });
 	}
 
-	private moveItem(stateMappings: EnumItemMapping, stateNotMatched: EnumItemInfo[], fromCol: FromToColumn, toCol: FromToColumn, fromIndex: number, startToIndex: number, endToIndex: number) {
-		let originalTo = this.enumValues.to;
+	private moveItem(stateMappings: EnumItemInfo[][], stateNotMatched: EnumItemInfo[], fromCol: FromToColumn, toCol: FromToColumn, fromIndex: number, startToIndex: number, endToIndex: number) {
 		let dragItem = this.enumValues.from[fromIndex];
 		if (fromCol === FromToColumn.to) {
 			//清除原来的mapping
-			let key = originalTo[startToIndex].name;
-			let matchedArr = stateMappings[key];
-			if (matchedArr !== null) {
-				matchedArr.splice(matchedArr.findIndex((i) => i.idx === fromIndex), 1);
-			}
+			let matchedArr = stateMappings[startToIndex];
+			matchedArr.splice(matchedArr.findIndex((i) => i.idx === fromIndex), 1);
 		} else {
 			stateNotMatched.splice(stateNotMatched.findIndex((i) => i.idx === fromIndex), 1);
 		}
 
 		if (toCol === FromToColumn.to) {
-			var key = originalTo[endToIndex].name;
-			if (key === null) {
-				return;
-			}
-			var mapArr = stateMappings[key];
 			dragItem.selected = false;
-			if (mapArr == null) {
-				stateMappings[key] = [dragItem]
-			} else {
-				mapArr.push(dragItem);
-			}
+			stateMappings[endToIndex].push(dragItem);
 		} else {
 			stateNotMatched.push(dragItem);
 		}

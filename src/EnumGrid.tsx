@@ -8,7 +8,11 @@ import ItemContainer from './ItemContainer';
 //     }
 // }
 
-export default function EnumGrid(props: GridParam) {
+// const MyArrayComponent = () => Array(5).fill(<div />);
+// const el2 = <MyArrayComponent />; // throws an error, 不支持
+// const MyArrayComponent = () => (Array(5).fill(<div />) as any) as JSX.Element; 这样可以...
+
+const EnumGrid = (props: GridParam) => {
 	var list = [];
 	let {fromNotMatched: notMatchedArr, to: toArr, mappings: matchedMappings} = props;
 	var maxLen = Math.max(notMatchedArr.length, toArr.length);
@@ -40,3 +44,5 @@ export default function EnumGrid(props: GridParam) {
 	return <div>{list}</div>;
 
 }
+
+export default EnumGrid;

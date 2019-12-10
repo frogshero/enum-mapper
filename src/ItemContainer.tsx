@@ -4,7 +4,7 @@ import ItemForDrag from './ItemForDrag'
 
 export default class ItemContaner extends React.Component<ContainerParam> {
 	allowDrop = (ev: React.DragEvent) => {
-		ev.preventDefault();
+        ev.preventDefault();
     }
     
     dragStart = (e: React.DragEvent, fromIdx: number) => {

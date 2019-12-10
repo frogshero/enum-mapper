@@ -40,9 +40,9 @@
 }
 .From-item {
   width: 300px;
+  /* background-image: linear-gradient(to right, white , lightgreen); */
 }
-.From-item-SEL {
-  width: 300px;
+.From-item-selected {
   color: red;
   font-weight: bold;
 }

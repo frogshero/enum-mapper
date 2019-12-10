@@ -8,7 +8,7 @@ export default class ItemForMapping extends React.Component<DragItemParam> {
 
     render() {
         let itemInfo = this.props.itemInfo;
-        return <div className={itemInfo.selected ? "From-item-SEL" : "From-item"} 
+        return <div className={itemInfo.selected ? "From-item From-item-selected" : "From-item"} 
             onClick={(e)=>this.props.itemClick(e, itemInfo.idx)} 
             draggable="true" 
             onDragStart={(e)=>this.props.dragStart(e, itemInfo.idx)}>

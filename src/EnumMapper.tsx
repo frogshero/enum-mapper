@@ -1,11 +1,12 @@
 import React from 'react';
 import EnumGrid from './EnumGrid';
 import { EnumItemInfo, EnumInfoData, MappingState, FromToColumn, DragStartInfo } from './EnumInfo';
+import get from './RequestHelper';
 // this.enumValues = require('./data.json');
-import EnumSource from './data.json';
+// import EnumSource from './data.json';
 
 export default class EnumMapper extends React.Component<{}, MappingState> {
-	enumValues: EnumInfoData;
+	loadedValues: EnumInfoData = {from: [], to: []};
 
 	sortByName(arr: EnumItemInfo[]) {
 		arr.sort((x, y) => {
@@ -21,18 +22,47 @@ export default class EnumMapper extends React.Component<{}, MappingState> {
 
 	constructor(props: any) {
 		super(props);
-		//this.enumValues = require('./data.json');
-		this.enumValues = { from: [], to: [] };
-		this.enumValues.from = EnumSource.from.map((val, idx) => { return { name: val.name, desc: val.desc, idx: idx, selected: false, display: val.name.concat(" " + val.desc) } });
-		this.sortByName(this.enumValues.from);
-		this.enumValues.to = EnumSource.to.map((val, idx) => { return { name: val.name, desc: val.desc, idx: idx, selected: false, display: val.name.concat(" " + val.desc) } });
-		this.sortByName(this.enumValues.to);
 
-		let defaultMappings: EnumItemInfo[][] = new Array(this.enumValues.to.length).fill([]);
-		let fromNotMatched = this.enumValues.from.slice();
-		this.enumValues.to.forEach((toItem) => {
+		this.state = {
+			enumValues: {from: [], to: []},
+			mappings: [],
+			fromNotMatched: [],
+			switchStr: ""
+			//Array(enumValues.to.length).fill(null)
+		};
+	}
+
+	componentDidMount = () => {
+		let fromEnumClz = "com.dianrong.loanapp.common.enums.EducationLevelEnum";
+		let toEnumClz = "com.dianrong.loanapp.app.domain.enums.assist.AssistEducationDegreeEnum";
+		let getFromUri = `enums/${fromEnumClz}/itemList`;
+		let getToUri = `enums/${toEnumClz}/itemList`;
+		get(getFromUri).then((data: any) => {
+			this.loadedValues.from = data;
+			this.updateEnum(this.loadedValues);
+		});
+		get(getToUri).then((data: any) => {
+			this.loadedValues.to = data;
+			this.updateEnum(this.loadedValues);
+		});
+	}
+
+    
+
+    updateEnum(loadedValues: EnumInfoData) {
+		//this.enumValues = require('./data.json');
+		if (loadedValues.from.length === 0 || loadedValues.to.length === 0) return;
+
+		loadedValues.from = loadedValues.from.map((val, idx) => { return { name: val.name, desc: val.desc, idx: idx, selected: false, display: val.name.concat(" " + val.desc) } });
+		this.sortByName(loadedValues.from);
+		loadedValues.to = loadedValues.to.map((val, idx) => { return { name: val.name, desc: val.desc, idx: idx, selected: false, display: val.name.concat(" " + val.desc) } });
+		this.sortByName(loadedValues.to);
+
+		let defaultMappings: EnumItemInfo[][] = new Array(loadedValues.to.length).fill([]);
+		let fromNotMatched = loadedValues.from.slice();
+		loadedValues.to.forEach((toItem) => {
 			var matched = false;
-			this.enumValues.from.forEach((fromItem, fromIndex) => {
+			loadedValues.from.forEach((fromItem, fromIndex) => {
 				if (fromItem.name.toUpperCase() === toItem.name.toUpperCase() || fromItem.desc.toUpperCase() === toItem.desc.toUpperCase()) {
 					matched = true;
 					defaultMappings[toItem.idx] = [fromItem];
@@ -44,12 +74,13 @@ export default class EnumMapper extends React.Component<{}, MappingState> {
 			}
 		});
 
-		this.state = {
+		this.setState({
+			enumValues: loadedValues,
 			mappings: defaultMappings,
 			fromNotMatched: fromNotMatched,
 			switchStr: ""
 			//Array(enumValues.to.length).fill(null)
-		};
+		});
 	}
 
 	btnClick() {
@@ -60,7 +91,7 @@ export default class EnumMapper extends React.Component<{}, MappingState> {
 				matchedArr.forEach((item) => {
 					result = result.concat("      case ", item.name, ":\n");
 				});
-				result = result.concat("        return ", this.enumValues.to[idx].name, ";\n");
+				result = result.concat("        return ", this.state.enumValues.to[idx].name, ";\n");
 			}
 		});
 
@@ -70,7 +101,7 @@ export default class EnumMapper extends React.Component<{}, MappingState> {
 	containerDrop = (dragStartInfo: DragStartInfo, targetCol: FromToColumn, targetRowIdx: number) => {
 		if ((dragStartInfo.col === targetCol && dragStartInfo.rowIdx === targetRowIdx)  //实际没动
 			|| (targetCol === FromToColumn.from && dragStartInfo.col === FromToColumn.from)  //from => from 
-			|| (targetCol === FromToColumn.to && targetRowIdx >= this.enumValues.to.length) //超过了To列的最大长度，不能移动
+			|| (targetCol === FromToColumn.to && targetRowIdx >= this.state.enumValues.to.length) //超过了To列的最大长度，不能移动
 			) {
 			return;
 		}
@@ -83,7 +114,7 @@ export default class EnumMapper extends React.Component<{}, MappingState> {
 	}
 
 	private moveItem(stateMappings: EnumItemInfo[][], stateNotMatched: EnumItemInfo[], fromCol: FromToColumn, toCol: FromToColumn, fromIndex: number, startToIndex: number, endToIndex: number) {
-		let dragItem = this.enumValues.from[fromIndex];
+		let dragItem = this.state.enumValues.from[fromIndex];
 		if (fromCol === FromToColumn.to) {
 			//清除原来的mapping
 			let matchedArr = stateMappings[startToIndex];
@@ -108,7 +139,7 @@ export default class EnumMapper extends React.Component<{}, MappingState> {
 	}
 
 	containerClick = (col: FromToColumn, rowIdx: number) => {
-		if (rowIdx >= this.enumValues.to.length) {
+		if (rowIdx >= this.state.enumValues.to.length) {
 			return;
 		}
 		//多选只能这样移动：from -> to
@@ -126,7 +157,7 @@ export default class EnumMapper extends React.Component<{}, MappingState> {
 		return (
 		<div>
 			<div className="DDContainer"><div className="To-item">ToEnum</div><div className="To-item">Matched</div><div className="To-item">FromEnum</div></div>
-			<EnumGrid fromNotMatched={this.state.fromNotMatched} to={this.enumValues.to} mappings={this.state.mappings}
+			<EnumGrid fromNotMatched={this.state.fromNotMatched} to={this.state.enumValues.to} mappings={this.state.mappings}
 				containerDrop={this.containerDrop}
 				containerClick={this.containerClick}
 				setItemSelected={this.setItemSelected} 

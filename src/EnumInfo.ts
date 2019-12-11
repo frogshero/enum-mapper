@@ -1,7 +1,7 @@
 export interface EnumItemInfo {name: string, desc: string, idx: number, selected: boolean, display: string}
 export interface EnumInfoData {from: EnumItemInfo[], to: EnumItemInfo[]}
 // export interface EnumItemMapping {[key: number]: EnumItemInfo[]}
-export interface MappingState {mappings: EnumItemInfo[][], fromNotMatched: EnumItemInfo[], switchStr: string}
+export interface MappingState {	enumValues: EnumInfoData, mappings: EnumItemInfo[][], fromNotMatched: EnumItemInfo[], switchStr: string}
 export interface GridParam {
     fromNotMatched: EnumItemInfo[],
     to: EnumItemInfo[],

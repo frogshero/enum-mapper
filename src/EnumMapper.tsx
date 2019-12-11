@@ -24,6 +24,8 @@ export default class EnumMapper extends React.Component<{}, MappingState> {
 		super(props);
 
 		this.state = {
+			fromEnumClz: "com.dianrong.loanapp.common.enums.EducationLevelEnum",
+			toEnumClz: "com.dianrong.loanapp.app.domain.enums.assist.AssistEducationDegreeEnum",
 			enumValues: {from: [], to: []},
 			mappings: [],
 			fromNotMatched: [],
@@ -33,10 +35,10 @@ export default class EnumMapper extends React.Component<{}, MappingState> {
 	}
 
 	componentDidMount = () => {
-		let fromEnumClz = "com.dianrong.loanapp.common.enums.EducationLevelEnum";
-		let toEnumClz = "com.dianrong.loanapp.app.domain.enums.assist.AssistEducationDegreeEnum";
-		let getFromUri = `enums/${fromEnumClz}/itemList`;
-		let getToUri = `enums/${toEnumClz}/itemList`;
+		let getFromUri = `enums/${this.state.fromEnumClz}/itemList`;
+		let getToUri = `enums/${this.state.toEnumClz}/itemList`;
+
+		this.loadedValues = {from: [], to: []};
 		get(getFromUri).then((data: any) => {
 			this.loadedValues.from = data;
 			this.updateEnum(this.loadedValues);
@@ -46,9 +48,7 @@ export default class EnumMapper extends React.Component<{}, MappingState> {
 			this.updateEnum(this.loadedValues);
 		});
 	}
-
     
-
     updateEnum(loadedValues: EnumInfoData) {
 		//this.enumValues = require('./data.json');
 		if (loadedValues.from.length === 0 || loadedValues.to.length === 0) return;
@@ -155,7 +155,11 @@ export default class EnumMapper extends React.Component<{}, MappingState> {
 
 	render() {
 		return (
-		<div>
+		<div className = "Main-Grid">
+			<div>&nbsp;</div>
+			<div className="DDContainer"><input className="Input-Item" value={this.state.fromEnumClz}/></div>
+			<div className="DDContainer"><input className="Input-Item" value={this.state.toEnumClz}/></div>
+			<div>&nbsp;</div>
 			<div className="DDContainer"><div className="To-item">ToEnum</div><div className="To-item">Matched</div><div className="To-item">FromEnum</div></div>
 			<EnumGrid fromNotMatched={this.state.fromNotMatched} to={this.state.enumValues.to} mappings={this.state.mappings}
 				containerDrop={this.containerDrop}

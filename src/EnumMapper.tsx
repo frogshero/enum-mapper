@@ -153,12 +153,15 @@ export default class EnumMapper extends React.Component<{}, MappingState> {
 		this.setState({ mappings: stateMappings, fromNotMatched: stateNotMatched });
 	}
 
+	enumChange = () => {}
+
 	render() {
 		return (
 		<div className = "Main-Grid">
+			Enum Mapper
 			<div>&nbsp;</div>
-			<div className="DDContainer"><input className="Input-Item" value={this.state.fromEnumClz}/></div>
-			<div className="DDContainer"><input className="Input-Item" value={this.state.toEnumClz}/></div>
+			<div className="DDContainer"><input className="Input-Item" onChange={this.enumChange} value={this.state.fromEnumClz}/></div>
+			<div className="DDContainer"><input className="Input-Item" onChange={this.enumChange} value={this.state.toEnumClz}/></div>
 			<div>&nbsp;</div>
 			<div className="DDContainer"><div className="To-item">ToEnum</div><div className="To-item">Matched</div><div className="To-item">FromEnum</div></div>
 			<EnumGrid fromNotMatched={this.state.fromNotMatched} to={this.state.enumValues.to} mappings={this.state.mappings}

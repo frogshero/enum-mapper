@@ -11,7 +11,10 @@ function get(uri: string): any {
     }
     return fetch(Domain + uri, req)
         .then(res => res.json())
-        .catch(err => console.error("fetch get error", err));
+        .catch((err) => {
+                console.error("fetch get error", err);
+            }
+        );
 }
 
 export default get;

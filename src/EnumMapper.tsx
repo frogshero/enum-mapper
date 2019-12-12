@@ -40,12 +40,16 @@ export default class EnumMapper extends React.Component<{}, MappingState> {
 
 		this.loadedValues = {from: [], to: []};
 		get(getFromUri).then((data: any) => {
-			this.loadedValues.from = data;
-			this.updateEnum(this.loadedValues);
+			if (data) {
+				this.loadedValues.from = data;
+				this.updateEnum(this.loadedValues);
+			}
 		});
 		get(getToUri).then((data: any) => {
-			this.loadedValues.to = data;
-			this.updateEnum(this.loadedValues);
+			if (data) {
+				this.loadedValues.to = data;
+				this.updateEnum(this.loadedValues);
+			}
 		});
 	}
     
